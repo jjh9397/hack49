@@ -37,19 +37,28 @@ def read_seizure_times(filepath):
 
             if reg_start_match:
                 registration_start = parse_time(reg_start_match.group(1))
+                # Reset other values when a new registration starts
+                seizure_start = None
+                seizure_end = None
+
             if reg_end_match:
                 registration_end = parse_time(reg_end_match.group(1))
-            if seizure_start_match:
+
+            if seizure_start_match and registration_start:
                 seizure_start = parse_time(seizure_start_match.group(1))
-            if seizure_end_match:
+
+            if seizure_end_match and seizure_start:
                 seizure_end = parse_time(seizure_end_match.group(1))
 
-                if registration_start and seizure_start and seizure_end:
-                    # Calculate the start and end times relative to registration start
-                    relative_seizure_start = calculate_time_difference(registration_start, seizure_start)
-                    relative_seizure_end = calculate_time_difference(registration_start, seizure_end)
-                    
-                    # Store the results as a tuple (start, end) in the seizure_times array
-                    seizure_times.append((relative_seizure_start, relative_seizure_end))
+                # Calculate the start and end times relative to registration start
+                relative_seizure_start = calculate_time_difference(registration_start, seizure_start)
+                relative_seizure_end = calculate_time_difference(registration_start, seizure_end)
+
+                # Store the results as a tuple (start, end) in the seizure_times array
+                seizure_times.append((relative_seizure_start, relative_seizure_end))
+
+                # Reset seizure times after processing the pair
+                seizure_start = None
+                seizure_end = None
     
     return seizure_times
