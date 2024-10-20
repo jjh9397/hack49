@@ -2,6 +2,8 @@ import re
 from datetime import datetime, timedelta
 from pathlib import Path
 import collections
+import mne
+import numpy as np
 
 def parse_time(time_str):
     """Parse time string in the format HH.MM.SS into a datetime object."""
@@ -95,38 +97,83 @@ def read_seizure_times(filepath):
     return file_map
 
 
-import mne
-import numpy as np
-from pathlib import Path
+def createCroppedFif(datasets, epilepsy):
+    cropped_ep_edf_map = {}  # Dictionary to store the mapping of cropped EDF files to subjects
+    output_folder = Path(datasets, "cropped_ep_dataset") # Folder to save the cropped EDF files
+    output_folder.mkdir(exist_ok=True)  # Create the output folder if it doesn't exist
 
-def create_15_sec_epochs(edf_list):
-    epochs_dict = {}
+    i = 1
+    for pn_folder in epilepsy.glob("PN*"):
+        if pn_folder.is_dir():
+            print(f"processing folder: {pn_folder.name}")
 
-    # Iterate over each EDF file
-    for edf_file in edf_list:
-        # Load the EDF file using MNE
-        raw = mne.io.read_raw_edf(edf_file, preload=True)
+            subj = Path(epilepsy, pn_folder.name)
+            seizure_list_path = Path(subj, f"Seizures-list-{pn_folder.name}.txt")
+            seizure_times_map = read_seizure_times(seizure_list_path)
+            print(seizure_times_map)
+            # iterate through .edf files
+            for idx, edf_file in enumerate(pn_folder.glob("*.edf")):
+                print(f"  Found EDF file: {edf_file.name}")
 
-        # Get the total duration of the recording in seconds (5 minutes = 300 seconds)
-        total_duration = raw.times[-1]
+                start_end_pairs_list = seizure_times_map.get(edf_file.name, [])
 
-        # Ensure that the file is indeed a 5-minute file (300 seconds)
-        if total_duration != 300:
-            raise ValueError(f"EDF file {edf_file} is not 5 minutes long (duration: {total_duration} seconds).")
+                for start, end in start_end_pairs_list:
+                    epileform_start = start - 360
+                    epileform_end = start - 60
 
-        # Calculate the number of 15-second chunks
-        n_chunks = int(total_duration / 15)  # 300 seconds divided into 15-second intervals
+                    print(f"    File: {edf_file.name} -> start: {epileform_start} | end: {epileform_end}")
 
-        # Create artificial events every 15 seconds
-        events = np.array([[int(i * raw.info['sfreq'] * 15), 0, 1] for i in range(n_chunks)])
+                    ep_edf = mne.io.read_raw_edf(
+                        Path(subj, edf_file.name),
+                        preload=True,
+                        infer_types=True,
+                        # exclude=["EKG EKG", "SPO2", "HR", "1", "2", "MK"],
+                        # exclude=["SPO2", "HR", "1", "2", "MK"],
+                        include=['Fp1', 'Fp2', 'Cp5', 'Cp6', 'C3', 'C4', 'O1', 'O2'],
+                        verbose=False,
+                    )
 
-        # Define event_id for the epochs
+                    ep_edf = ep_edf.filter(l_freq=1, h_freq=40, verbose=False).notch_filter(60, verbose=False)
+                    ep_edf.set_montage("standard_1020", on_missing="ignore")
+                    ep_edf = ep_edf.crop(tmin=epileform_start, tmax=epileform_end)
+
+                    cropped_filename = f"cropped_ep{i}.fif"
+                    output_path = output_folder / cropped_filename
+                    
+                    ep_edf.save(output_path, overwrite=True, verbose=False)
+                    cropped_ep_edf_map[cropped_filename] = subj.name
+
+                    i += 1
+                    # print(ep_edf.times)
+    return cropped_ep_edf_map
+
+def createEpochFif(cropped_ep_edf_map):
+    epoch_subj_map = {}
+    cropped_dataset_path = Path("Datasets/cropped_ep_dataset")
+    i = 1
+    for cropped_ep in cropped_dataset_path.glob("*"):
+        print(cropped_ep.name)
+
+        raw = mne.io.read_raw_fif(Path(cropped_dataset_path, cropped_ep.name), preload=True)
+
+        # Get the total duration of the 5-minute cropped data 
+        duration = raw.times[-1]
+
+
+        n_epochs = int(duration // 15)
+
+        sfreq = raw.info['sfreq']  # Sampling frequency
+        events = np.array([[int(i * 15 * sfreq), 0, 1] for i in range(n_epochs)])
+
+
         event_id = {'15_sec_chunk': 1}
-
-        # Create epochs with a duration of 15 seconds
         epochs = mne.Epochs(raw, events, event_id, tmin=0, tmax=15, baseline=None, preload=True)
 
-        # Store the epochs in a dictionary with the EDF file name as the key
-        epochs_dict[edf_file] = epochs
+        epoch_filename = f"epoch{i}.fif"
+        epochs.save(Path("Datasets/epoch_ep_dataset", epoch_filename), overwrite=True, verbose=False)
 
-    return epochs_dict
+        epoch_subj_map[epoch_filename] = cropped_ep_edf_map.get(cropped_ep.name)
+        i += 1
+
+    
+
