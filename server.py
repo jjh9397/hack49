@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from ml.classify import evaluateFile
 import sys
 import os
 
 app = Flask(__name__)
+
+CORS(app)
 
 app.config['UPLOAD_FOLDER'] = 'userfiles'
 # app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
