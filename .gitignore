@@ -165,7 +165,7 @@ Datasets/
 
 userfiles/
 wandb/
-model.pt
+# model.pt
 
 *.pkl
 *.feather
