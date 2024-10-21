@@ -162,3 +162,10 @@ cython_debug/
 #.idea/
 
 Datasets/
+
+userfiles/
+wandb/
+model.pt
+
+*.pkl
+*.feather

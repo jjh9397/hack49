@@ -4,6 +4,7 @@ from pathlib import Path
 import collections
 import mne
 import numpy as np
+import pandas as pd
 
 def parse_time(time_str):
     """Parse time string in the format HH.MM.SS into a datetime object."""
@@ -129,7 +130,7 @@ def createCroppedFif(datasets, epilepsy):
                         infer_types=True,
                         # exclude=["EKG EKG", "SPO2", "HR", "1", "2", "MK"],
                         # exclude=["SPO2", "HR", "1", "2", "MK"],
-                        include=['Fp1', 'Fp2', 'Cp5', 'Cp6', 'C3', 'C4', 'O1', 'O2'],
+                        include=['Fp1', 'Cp5', 'Cp6', 'C3', 'C4', 'O1', 'O2'],
                         verbose=False,
                     )
 
@@ -147,30 +148,37 @@ def createCroppedFif(datasets, epilepsy):
                     # print(ep_edf.times)
     return cropped_ep_edf_map
 
-def createEpochFif(cropped_ep_edf_map):
+def createEpochFif(datasets, cropped_ep_edf_map):
     epoch_subj_map = {}
-    cropped_dataset_path = Path("Datasets/cropped_ep_dataset")
+    cropped_dataset_path = Path(datasets, "cropped_ep_dataset")
     i = 1
     for cropped_ep in cropped_dataset_path.glob("*"):
         print(cropped_ep.name)
 
         raw = mne.io.read_raw_fif(Path(cropped_dataset_path, cropped_ep.name), preload=True)
 
-        raw.filter(l_freq=1, h_freq=40, verbose=False).notch_filter(60, verbose=False)
-        raw.resample(200)
+        if len(raw.ch_names) < 7:
+            print("Channel less than 8!!!")
+            continue
+
+        raw = raw.filter(l_freq=1, h_freq=40, verbose=False).notch_filter(60, verbose=False)
+        raw = raw.resample(256)
 
         epochs = mne.make_fixed_length_epochs(raw, duration=15, preload=False)
 
-        epoch_filename = f"epoch{i}-raw.fif"
-        epochs.save(Path("Datasets/epoch_ep_dataset", epoch_filename), overwrite=True, verbose=False)
+        epoch_filename = f"ep_epoch{i}-epo.fif"
+        epochs.save(Path(datasets, "epoch_ep_dataset", epoch_filename), overwrite=True, verbose=False)
 
         epoch_subj_map[epoch_filename] = cropped_ep_edf_map.get(cropped_ep.name)
         i += 1
 
     return epoch_subj_map
 
-def createHealthyFif(healthy):
+def createHealthyFif(datasets, healthy):
+    h_epoch_subj_map = {}
+
     base_path = healthy
+    i = 1
     for sub_folder in base_path.glob("sub-*"):
         ses1_folder = sub_folder / 'ses-1'
 
@@ -184,6 +192,80 @@ def createHealthyFif(healthy):
                 fdt_file = eeg_folder.glob(f"{sub_folder.name}_ses-1_task-eyesclosed_eeg.set")
 
                 for file in fdt_file:
-                    print(f"    {file.name}")
-    
+                    h_edf = None
+                    try: 
+                        h_edf = mne.io.read_raw_eeglab(
+                            Path(eeg_folder, file.name),
+                            preload=True,
+                        )
+                    except Exception as e:
+                        print(e)
+                        continue
 
+                    if not h_edf:
+                        continue
+
+                    h_edf.set_montage("standard_1020", on_missing="warn")
+                    h_edf.pick_channels(['Fp1', 'CP5', 'CP6', 'C3', 'C4', 'O1', 'O2'])
+                    if len(h_edf.ch_names) < 7:
+                        print(f"{fdt_file.name} -- <8 channels")
+                        continue
+
+                    h_edf = h_edf.filter(l_freq=1, h_freq=40, verbose=False).notch_filter(60, verbose=False)
+                    h_edf = h_edf.resample(256)
+                    epochs = mne.make_fixed_length_epochs(h_edf, duration=15, preload=False)
+
+                    epoch_filename = f"h_epoch{i}-epo.fif"
+                    epochs.save(Path(datasets, "epoch_h_dataset", epoch_filename), overwrite=True, verbose=False)
+
+                    h_epoch_subj_map[epoch_filename] = sub_folder.name
+                    i += 1
+                    print(f"    {file.name}")
+
+    return h_epoch_subj_map
+
+def createDataframe(datasets, ep_epoch_subj_map, h_epoch_subj_map):
+    ep_path = Path(datasets, "epoch_ep_dataset")
+    h_path = Path(datasets, "epoch_h_dataset")
+    data = []
+    test_data = []
+    for path in ep_path.glob("*"):
+        subjName = ep_epoch_subj_map[path.name]
+        epochs = mne.read_epochs(path)
+        for i, epoch in enumerate(epochs):
+            row = {"subj":subjName, "label":1, "epoch":epoch}
+            if subjName == 'PN16':
+                print(f"Excluded: {path.name}")
+                test_dataset_path = Path(datasets, f'test_dataset/ep_epoch{i}.npy')
+                np.save(test_dataset_path, epoch)
+                test_data.append(row)
+            else:
+                data.append(row)
+    
+    for path in h_path.glob("*"):
+        subjName = h_epoch_subj_map[path.name]
+        epochs = mne.read_epochs(path)
+        for i, epoch in enumerate(epochs):
+            row = {"subj":subjName, "label":0, "epoch":epoch}
+            if subjName == 'sub-01':
+                print(f"Excluded: {path.name}")
+                test_dataset_path = Path(datasets, f'test_dataset/h_epoch{i}.npy')
+                np.save(test_dataset_path, epoch)
+                test_data.append(row)
+            else:
+                data.append(row)
+
+    df = pd.DataFrame(data)
+    test_df = pd.DataFrame(test_data)
+    return df, test_df
+
+def userFileToPd(user_filepath):
+    path = Path(user_filepath)
+    data = []
+    if path.suffix == ".npy" and path.is_file():
+        row = {"epoch":np.load(path)}
+        data.append(row)
+        return pd.DataFrame(data)
+
+    else:
+        raise Exception("invalid file!!!")
