@@ -133,11 +133,11 @@ def createCroppedFif(datasets, epilepsy):
                         verbose=False,
                     )
 
-                    ep_edf = ep_edf.filter(l_freq=1, h_freq=40, verbose=False).notch_filter(60, verbose=False)
+                    # ep_edf = ep_edf.filter(l_freq=1, h_freq=40, verbose=False).notch_filter(60, verbose=False)
                     ep_edf.set_montage("standard_1020", on_missing="ignore")
                     ep_edf = ep_edf.crop(tmin=epileform_start, tmax=epileform_end)
 
-                    cropped_filename = f"cropped_ep{i}.fif"
+                    cropped_filename = f"cropped_ep{i}_raw.fif"
                     output_path = output_folder / cropped_filename
                     
                     ep_edf.save(output_path, overwrite=True, verbose=False)
@@ -156,24 +156,34 @@ def createEpochFif(cropped_ep_edf_map):
 
         raw = mne.io.read_raw_fif(Path(cropped_dataset_path, cropped_ep.name), preload=True)
 
-        # Get the total duration of the 5-minute cropped data 
-        duration = raw.times[-1]
+        raw.filter(l_freq=1, h_freq=40, verbose=False).notch_filter(60, verbose=False)
+        raw.resample(200)
 
+        epochs = mne.make_fixed_length_epochs(raw, duration=15, preload=False)
 
-        n_epochs = int(duration // 15)
-
-        sfreq = raw.info['sfreq']  # Sampling frequency
-        events = np.array([[int(i * 15 * sfreq), 0, 1] for i in range(n_epochs)])
-
-
-        event_id = {'15_sec_chunk': 1}
-        epochs = mne.Epochs(raw, events, event_id, tmin=0, tmax=15, baseline=None, preload=True)
-
-        epoch_filename = f"epoch{i}.fif"
+        epoch_filename = f"epoch{i}-raw.fif"
         epochs.save(Path("Datasets/epoch_ep_dataset", epoch_filename), overwrite=True, verbose=False)
 
         epoch_subj_map[epoch_filename] = cropped_ep_edf_map.get(cropped_ep.name)
         i += 1
 
+    return epoch_subj_map
+
+def createHealthyFif(healthy):
+    base_path = healthy
+    for sub_folder in base_path.glob("sub-*"):
+        ses1_folder = sub_folder / 'ses-1'
+
+        print(sub_folder.name)
+        if ses1_folder.exists():
+            eeg_folder = ses1_folder / 'eeg'
+
+            print(f"  {ses1_folder.name}")
+            if eeg_folder.exists():
+                # print(f"    {sub_folder.name}_ses-1_task-eyeclosed_eeg.set")
+                fdt_file = eeg_folder.glob(f"{sub_folder.name}_ses-1_task-eyesclosed_eeg.set")
+
+                for file in fdt_file:
+                    print(f"    {file.name}")
     
 
