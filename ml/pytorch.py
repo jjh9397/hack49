@@ -61,7 +61,7 @@ class EEGNet(nn.Module):
         return self.net(eeg)
 
 def buildDatasets():
-    df = pd.read_pickle("dataset.pkl")
+    df = pd.read_pickle("ml/dataset.pkl")
     labels = df["label"]
     subjs = df['subj']
     print(subjs)
@@ -134,35 +134,76 @@ def train(config, trainloader, valloader, net, crit, opt):
             examples += bsize
 
         avg_loss = running_loss / length
-        print(f'[{epoch}] loss: {avg_loss:.3f}')
         wandb.log({"train": {"epoch": epoch, "avg_loss": avg_loss, "lr": scheduler.get_last_lr()[0]}}, step=examples)
 
-        # validate
-        net.eval()
-        
-        running_loss = 0.0
-        with torch.inference_mode():
-            for epochs, labels in valloader:
-                epochs = epochs.to(device)
-                labels = labels.to(device)
+    # After all epochs are done, evaluate final validation metrics
+    net.eval()
 
-                outputs = net(epochs).squeeze(1)
-                
-                loss = crit(outputs, labels)
-                running_loss += loss.item()
+    running_loss = 0.0
+    correct = 0
+    total = 0
+    false_positives = 0  # Initialize false positives counter
+    true_positives = 0   # Initialize true positives counter
+    true_negatives = 0   # Initialize true negatives counter
+    false_negatives = 0  # Initialize false negatives counter
 
-            avg_loss = running_loss / vlength
+    with torch.inference_mode():
+        for epochs, labels in valloader:
+            epochs = epochs.to(device)
+            labels = labels.to(device)
+
+            outputs = net(epochs).squeeze(1)
             
-            if np.isnan(avg_loss):
-                raise Exception("val avg_loss is NaN")
+            # Compute loss
+            loss = crit(outputs, labels)
+            running_loss += loss.item()
             
+            # Convert the model output to predictions (binary classification)
+            preds = torch.round(torch.sigmoid(outputs))
+            
+            # Calculate correct predictions
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+
+            # Calculate false positives (predicted = 1, actual = 0)
+            false_positives += ((preds == 1) & (labels == 0)).sum().item()
+
+            # Calculate true negatives (predicted = 0, actual = 0)
+            true_negatives += ((preds == 0) & (labels == 0)).sum().item()
+
+            # Calculate true positives (predicted = 1, actual = 1)
+            true_positives += ((preds == 1) & (labels == 1)).sum().item()
+
+            # Calculate false negatives (predicted = 0, actual = 1)
+            false_negatives += ((preds == 0) & (labels == 1)).sum().item()
+
             print(f'[{epoch}, val] loss: {avg_loss:.3f}')
-            wandb.log({"val": {"epoch": epoch, "avg_loss": avg_loss}}, step=examples)
 
-        # path = f"/kaggle/working/{config.eeg_net_type}-{config.spectrogram_net_type}-{config.stack}-{epoch}ep-{avg_loss:.2f}l.pt"
-        # torch.save({"epoch": epoch, "model_state_dict": net.state_dict(),
-                #    "opt_state_dict": opt.state_dict(), "loss": loss.item()}, path)
-        # wandb.save(path)
+    # Final accuracy calculation
+    accuracy = correct / total
+
+    # Final false positives and true negatives calculation
+    specificity = true_negatives / (true_negatives + false_positives) if (true_negatives + false_positives) > 0 else 0
+
+    # Sensitivity (true positive rate)
+    sensitivity = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+
+    avg_loss = running_loss / vlength
+    
+    print(f'Final validation results:')
+    print(f'Accuracy: {accuracy:.3f}')
+    print(f'False Positives: {false_positives}')
+    print(f'Specificity (True Negative Rate): {specificity:.3f}')
+    print(f'Sensitivity (True Positive Rate): {sensitivity:.3f}')
+
+    wandb.log({
+        "val": {
+            "final_accuracy": accuracy,
+            "final_false_positives": false_positives,
+            "final_specificity": specificity,
+            "final_sensitivity": sensitivity
+        }
+    })
 
     return net
 

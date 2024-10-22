@@ -7,6 +7,8 @@ import torch.nn as nn
 import torchvision
 import torch.nn.functional as F
 from ml.utils import userFileToPd
+import matplotlib.pyplot as plt
+import mne
 
 
 class EEGDataset(Dataset):
@@ -51,6 +53,22 @@ def buildData():
 
     return test_data
 
+
+def visualize_eeg(arr: np.array):
+    # (n_channels, n_times)
+    print('arrshape: ', arr.shape)
+    n_channels = 7
+    ch_names = ['Fp1', 'Cp5', 'Cp6', 'C3', 'C4', 'O1', 'O2']
+    ch_types = ["eeg"] * n_channels
+    sf = 256
+
+    info = mne.create_info(ch_names=ch_names, ch_types=ch_types, sfreq=sf)
+
+    raw = mne.io.RawArray(arr, info)
+    fig = raw.plot(show=False)
+    fig.savefig("userfiles/eeg.png")
+    plt.close(fig)
+
 def evaluateFile(user_filepath):
     print(f"I got filepath: {user_filepath}\n")
     df = userFileToPd(user_filepath)
@@ -72,15 +90,17 @@ def evaluateFile(user_filepath):
     data_loader = DataLoader(data, batch_size=1, shuffle=False)
 
     for epochs in data_loader:
+        # visualize_eeg(epochs.squeeze(0)[0, :, :])
         epochs = epochs.to(device)
         print(f"Epoch shape: {epochs.shape}")
 
         pred = F.sigmoid(eeg_net(epochs)).squeeze(1)
 
-        pred = ["Epilepsy" if (p > 0.5) else "Healthy" for p in pred]
+        pred_str = ["Epilepsy" if (p > 0.5) else "Healthy" for p in pred]
+        val = [float(p) for p in pred]
         print(f"Output: {pred}")
 
-        return pred
+        return pred_str, round(val[0], 2)
 
     raise Exception("No data in data_loader")
 

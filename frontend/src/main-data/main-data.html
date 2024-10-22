@@ -1,0 +1,277 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tailwind Project</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
+    </style>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=chevron_right" />
+    <style>
+        .filter-saturate {
+            filter: saturate(1);
+            /* Increase saturation */
+        }
+
+        .learn-more-text {
+            transition: text-decoration 0.3s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container w-[95%] m-auto bg-gray-100">
+
+        <div class="firstpart">
+
+
+
+
+            <div class="everything w-[85%] m-auto">
+
+
+                <div class="heading text-4xl xs:text-sm md:text-xl xl:text-4xl 5xl:text-5xl font-bold mb-3 leading-tight pt-10">Get Your Diagnosis!</div>
+
+                <div class="main relative pt-[60px] md:pt-[20px] xl:pt-[60px] 5xl:pt-[40px] xs:pt-3 mb-5 flex flex-col gap-5 xs:gap-2 md:flex-row xs:flex-col items-center">
+                    <div class="left w-[50%] xs:w-[100%] flex flex-col">
+                        <div class="tagline text-4xl xs:text-sm md:text-xl xl:text-4xl 5xl:text-5xl font-bold mb-3 xs:mb-1 leading-tight xs:w-[full]">
+                            Empowering You with Insight: Understand Your Symptoms Today!
+                        </div>
+                        <div class="subtagline text-lg xs:text-xs md:text-base xl:text-lg 5xl:text-xl font-medium leading-relaxed mb-6">
+                            Welcome to the Get Diagnosis page of our Epilepsy Diagnosis App. Here, you can input your
+                            symptoms into our advanced AI-powered tool, which analyzes your input and provides
+                            personalized insights. Your health is important, and we’re here to help you understand it
+                            better.
+                        </div>
+                    </div>
+
+                    <div class="right w-[50%] xs:w-[100%] xl:w-[50%] flex justify-center pl-20 xs:pl-0">
+                        <img src="/Images/Illustration 5.png" alt="Illustration depicting health insights"
+                            class="w-full max-w-sm transform scale-100 hover:scale-105 transition-transform duration-300">
+                    </div>
+                </div>
+
+
+            </div>
+            <!-- Form -->
+            <div class="form w-full">
+                <div class="main2 h-[90vh] md:h-[100vh] xl:h-[110vh] 2xl:h-[80vh] 4xl:h-[60vh] 5xl:h-[60vh] bg-[#0A0A0A] text-white mt-[-12px] rounded-xl p-6 xs:p-3 2xl:p-6 z-10 relative">
+
+                    <div class="everything flex w-[85%] xs:w-[90%] flex-col m-auto">
+                        <h2 class="text-3xl xs:text-sm md:text-xl xl:text-3xl 5xl:text-4xl font-bold mb-2 text-center">Get Your Diagnosis</h2>
+                        <p class="mb-6 text-gray-400 xs:text-xs md:text-base xl:text-lg 5xl:text-xl text-center max-w-full">
+                            Please provide detailed information about your symptoms, and we will analyze them to assist
+                            you in understanding your condition better.
+                        </p>
+                        <form class="diagnosis-form bg-white text-black p-5 xs:p-3 rounded shadow-md w-full"
+                            enctype="multipart/form-data">
+                            <label class="block mb-2 xs:text-xs md:text-base 5xl:text-lg" for="name">Name:</label>
+                            <input type="text" id="name" class="w-full p-2 xs:p-1 border border-gray-300 rounded"
+                                placeholder="Enter your name" required />
+
+                            <label class="block mt-4 xs:mt-2 md:mt-2 mb-2 xs:text-xs md:text-base 5xl:text-lg" for="age">Age:</label>
+                            <input type="number" id="age" class="w-full p-2 xs:p-1 border border-gray-300 rounded"
+                                placeholder="Enter your age" required />
+
+                            <label class="block mt-4 xs:mt-2 md:mt-2 mb-2 xs:text-xs md:text-base 5xl:text-lg"  for="gender">Gender:</label>
+                            <select id="gender" class="w-full p-2 xs:p-1 md:p-2 border border-gray-300 rounded" required>
+                                <option value="">Select your gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+
+                            <label class="block mt-4 xs:mt-2 mb-2 xs:text-xs md:text-base 5xl:text-lg" for="eeg-file">Upload EEG File (.npy format):</label>
+                            <input type="file" id="eeg-file" class="w-full p-2 border border-gray-300 rounded"
+                                accept=".npy" required />
+
+                            <button type="submit"
+                                class="mt-4 xs:mt-2 md:mt-2 w-full  hover:bg-blue-700 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold py-2 px-6 rounded-md shadow-lg hover:bg-gradient-to-l transition duration-300">Submit</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="main2 bg-white mt-5">
+                    <div class="output   text-black rounded-xl p-4 shadow-lg h-[40vh]  ">
+                        <h2 class="text-2xl xs:text-sm md:text-3xl 5xl:text-xl font-bold mb-2">Diagnosis Output</h2>
+                        <p class="output-text xs:text-xs md:text-base xl:text-xl 5xl:text-xl">Your detailed diagnosis output will appear here after you submit the
+                            form.</p>
+                    </div>
+                </div>
+
+
+                <div class="feedback">
+                    <div class="feedback-section  bg-white mt-5 mb-5   text-black rounded-xl  p-4 shadow-md ">
+                        <h2 class="text-lg xs:text-sm font-bold mb-2 md:text-3xl 5xl:text-xl">We Value Your Feedback</h2>
+                        <p class="mb-4 xs:text-xs md:text-xl 5xl:text-lg">Your feedback is essential for us to grow and improve our AI model. Please share
+                            your thoughts about the diagnosis, and help us serve you better!</p>
+                        <textarea id="feedback" rows="4" class="w-full p-2 border border-gray-300 rounded"
+                            placeholder="Share your thoughts about the diagnosis..." required></textarea>
+                        <button type="submit"
+                            class="mt-4 w-full  hover:bg-blue-700 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold py-2 px-6 rounded-md shadow-lg hover:bg-gradient-to-l transition duration-300">Submit</button>
+                        <p class="feedback-response mt-2"></p>
+                    </div>
+                </div>
+            </div>
+            <!-- FOOTER -->
+        <div class="footer rounded-t-xl mt-10 bg-black text-white">
+            <div class="sections flex xs:flex-col md:flex-row p-8 pb-2">
+
+                <div class="left w-1/2 xs:w-[100%] md:w-1/2 flex flex-col h-[60vh] xs:h-[30vh] md:h-[60vh] justify-between xs:justify-normal md:justify-between">
+                    <div class="name text-3xl xs:text-xs md:text-lg xl:text-xl 4xl:text-3xl 5xl:text-3xl">
+                        Re:Eval Epilepsy
+                    </div>
+                    <div class="text text-sm xs:text-xs md:text-sm 4xl:text-lg 5xl:text-lg w-[70%] xs:w-[100%] md:w-[70%]">
+                        © 2024 TBD. All rights reserved. Our mission is to provide reliable information and
+                        resources about epilepsy to empower individuals and their families. For more insights,
+                        explore our informational pages or contact us for support. Together, let's enhance awareness
+                        and understanding of epilepsy.
+                    </div>
+                </div>
+
+                <div class="right w-1/2 xs:w-[100%] md:w-1/2 flex flex-col gap-12 xs:gap-4 md:gap-8 xl:gap-12">
+                    <div class="head text-4xl xs:text-sm xl:text-lg 4xl:text-4xl 5xl:text-4xl font-bold">Empowering Your Health Journey, One Insight at a Time.
+                    </div>
+
+                    <!-- FIRST  -->
+                    <div class="sayhello flex xs:gap-4 md:gap-0">
+                        <div class="email flex flex-col w-1/2">
+                            <div class="title text-xs xs:text-xs md:text-xs 5xl:text-base text-gray-200 font-medium">
+                                Say Hello
+                            </div>
+                            <div class="emaillist flex flex-col text-xl xs:text-xs md:text-sm 5xl:text-2xl text-gray-400 leading-tight font-medium">
+                                <div class="email1">example1@gmail.com</div>
+                                <div class="email1">example2@gmail.com</div>
+                            </div>
+                        </div>
+
+                        <div class="call flex flex-col w-1/2">
+                            <div class="title text-xs xs:text-xs 5xl:text-base text-gray-200 font-medium">
+                                Call
+                            </div>
+                            <div class="calllist flex flex-col text-xl xs:text-xs md:text-sm 5xl:text-2xl  text-gray-400 leading-tight font-medium">
+                                <div class="call1">306-XXX-XX69</div>
+                                <div class="call2">306-XXX-XX69</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Second -->
+                    <div class="menulists flex xs:gap-8 md:gap-0">
+                        <div class="left w-1/2 flex flex-col">
+                            <div class="head text-xs xs:text-xs md:text-xs 5xl:text-base text-gray-200 font-medium">Menu</div>
+                            <div class="menulist text-gray-400 cursor-pointer leading-tight text-xl xs:text-xs md:text-sm 5xl:text-2xl font-medium">
+                                <ul>
+                                    <a href="/index.html">
+                                        
+                                        <li>Home</li>
+                                    </a>
+                                    <a href="/src/about-us/about-us.html">
+
+                                        <li>About Us</li>
+                                    </a>
+                                    <a href="/src/guide/guide.html">
+
+                                        <li>Guide</li>
+                                    </a>
+                                    <a href="https://www.epilepsy.com/what-is-epilepsy">
+
+                                        <li>Informational</li>
+                                    </a>
+                                    <a href="/src/main-data/main-data.html">
+
+                                        <li>Get Diagnosis</li>
+                                    </a>
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                        <div class="right w-1/2 flex flex-col">
+                            <div class="head text-xs xs:text-xs md:text-xs 5xl:text-base text-gray-200 font-medium">Social</div>
+                            <div class="menulist text-gray-400 leading-tight text-xl xs:text-xs md:text-sm 5xl:text-2xl font-medium">
+                                <ul>
+                                    <li>Twitter</li>
+                                    <li>Instagram</li>
+                                    <li>LinkedIn</li>
+                                    <li>Github</li>
+
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LASTPART -->
+                    <div class="last flex justify-between text-lg xs:text-xs md:text-sm 5xl:text-xl">
+                        <div class="last1 text-gray-200 text-xs">© TBD 2024</div>
+                        <div class="last2 text-gray-200 text-xs">PRIVACY - TERMS</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        </div>
+
+        <script>
+
+            document.querySelector('.diagnosis-form').addEventListener('submit', async function (e) {
+                e.preventDefault(); // Prevent the default form submission
+
+                // Gather input values
+                // const name = document.getElementById('name').value;
+                // const age = document.getElementById('age').value;
+                // const gender = document.getElementById('gender').value;
+                
+                // Placeholder for processing EEG file and generating output
+                // Here you would typically process the EEG file, make API calls, etc.
+                
+                const fileInput = document.getElementById('eeg-file');
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0])
+
+                try {
+                    const response = await fetch('http://localhost:5000/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    // display response data
+                    const outputText = document.querySelector('.output-text');
+                    outputText.textContent = `Rating: ${data.prediction_val}| Likely Diagnosis Result: ${data.prediction}`
+
+                    const output = document.querySelector('.output');
+                    output.classList.remove('hidden');
+
+                    // Show feedback section
+                    const feedbackSection = document.querySelector('.feedback-section');
+                    feedbackSection.classList.remove('hidden'); // Show feedback section
+
+
+                } catch (error) {
+                    console.error('Error: ', error);
+                    const outputText = document.querySelector('.output-text');
+                    outputText.textContent = 'An error occurred while submitting the form.'
+                }
+
+            });
+
+            document.getElementById('submit-feedback').addEventListener('click', function () {
+                const feedbackText = document.getElementById('feedback').value;
+                const feedbackResponse = document.querySelector('.feedback-response');
+
+                // Here, you could send feedback to a server or process it as needed
+                feedbackResponse.textContent = "Thank you for your feedback! We appreciate your input.";
+                document.getElementById('feedback').value = ''; // Clear the textarea
+
+            });
+        </script>
+</body>
+
+</script>
+
+</html>

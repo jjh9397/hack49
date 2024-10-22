@@ -30,10 +30,10 @@ def upload_file():
     file.save(file_path)
 
 
-    processed_result = evaluateFile(file_path)
+    processed_result, val = evaluateFile(file_path)
 
     # Return the result as JSON
-    return jsonify({"filename": file.filename, "prediction": processed_result})
+    return jsonify({"filename": file.filename, "prediction": processed_result, "prediction_val": val})
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
